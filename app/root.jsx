@@ -1,4 +1,4 @@
-import {useNonce} from '@shopify/hydrogen';
+import {Script, useNonce} from '@shopify/hydrogen';
 import {defer} from '@shopify/remix-oxygen';
 import {
   Links,
@@ -14,6 +14,9 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
+// FedEx / ShopRunner
+import { ShopRunner } from "~/components/ShopRunner";
+//import { ShopRunnerAnalytics } from "~/components/ShopRunnerAnalytics";
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -103,8 +106,11 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
+        <Script nonce={nonce} type='module' src="/shoprunner.js" />
       </head>
       <body>
+      test
+{nonce}
         <Layout {...data}>
           <Outlet />
         </Layout>
@@ -117,7 +123,6 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  /** @type {LoaderReturnData} */
   const rootData = useLoaderData();
   const nonce = useNonce();
   let errorMessage = 'Unknown error';
