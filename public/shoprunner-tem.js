@@ -953,9 +953,10 @@ import {
     }
   }
 
+  // TODO: Review if this function is necessary
   export function replaceLocalhost(url) {
     if (!url) return
-    const localhost = 'http://localhost:3000'
+    const localhost = window.location.host
     const { shopifyStoreUrl } = themeConfig
     if (url.includes(localhost)) {
         return url.replace(localhost, shopifyStoreUrl);
