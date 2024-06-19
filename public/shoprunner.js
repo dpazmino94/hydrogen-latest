@@ -36,6 +36,7 @@ const themeConfig = {
   payMethodContainerSelector: 'div[data-step="payment_method"]',
   payMethodSelector: 'div[data-review-section="shipping-cost"]',
   pdpBenefitsAccessSelector: 'body > main > div > div.product-main > h1',
+  cartPageBenefitsAccessSelector: 'body > main > div',
   pdpVariantIdHiddenInputSelector: 'form[action="/cart/add"] input[data-variant-id][name="quantity"]',
   shopifyStoreUrl: 'https://shoprunner-demo-01.myshopify.com',
   ajaxCartRoute: '/api/cart',
