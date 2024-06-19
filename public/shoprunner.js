@@ -65,7 +65,7 @@ const themeConfig = {
       placementMethod: 'after',
     },
     {
-      productSelector: '#cart-aside > aside > main > div > div.cart-details > div:nth-child(1) > ul > li > div > a',
+      productSelector: 'body > main > div > div > div.cart-details > div:nth-child(1) > ul > li > div > a',
       locationMethod: 'closest',
       locationSelector: 'div',
       placementMethod: 'after',
