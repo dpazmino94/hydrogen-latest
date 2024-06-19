@@ -96,30 +96,18 @@ export async function loader({context, params}) {
   return formatedCartData;
 }
 
-//*********** Usage ***********
-// const result = await cart.updateLines(
-//   [
-//     {
-//       merchandiseId: 'gid://shopify/ProductVariant/123456789',
-//       quantity: 2,
-//     },
-//   ],
-//   // Optional parameters
-//   {
-//     cartId: '123', // override the cart id
-//     country: 'US', // override the country code to 'US'
-//     language: 'EN', // override the language code to 'EN'
-//   },
-// ); */ 
-
 export async function action({context, params, request}) {
   //updateAttributes
-  //const {cart} = context;
-  const {id, properties, quantity} = await request.json();
+  const {cart} = context;
+  const {properties} = await request.json();
+  if (params.func == 'update.js') return {};
+  const result = await cart.updateAttributes([
+    {
+      key: '_isLoggedInToShopRunner',
+      value: properties._isLoggedInToShopRunner,
+    },
+  ]);
+  console.log(params.func, 'POST', result, properties._isLoggedInToShopRunner);
 
-  console.log(params.func, 'POST');
-  //console.log(jsonTemp, 'POST');
-  // const cartObject = await cart.get();
-  // return cartObject;
-  return {id, properties, quantity};
+  return result;
 }
