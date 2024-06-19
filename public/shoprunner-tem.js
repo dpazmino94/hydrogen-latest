@@ -23,6 +23,7 @@ import {
     cartPageBenefitsAccessSelector: '#cart',
     pdpVariantIdHiddenInputSelector: 'product-info form[action="/cart/add"] input[name="id"]',
     shopifyStoreUrl: '',
+    ajaxCartRoute: '/cart',
     eligibilityContainerSelectors: [
       {
         productSelector: 'product-info a[href^="/products/"]', // product (pdp)
@@ -467,6 +468,7 @@ import {
       const currentLoginStateVal = cart.attributes[loggedInPrp]
       const currentToken = cart.attributes[memberAuthTokenPrp]
       const tokenStr = (memberAuthToken !== false) ? memberAuthToken : ''
+      const { ajaxCartRoute } = themeConfig
       if ((currentLoginStateVal === isLoggedInStr) && (currentToken === tokenStr)) {
         lgr.log(`No change to logged in state on cart attribute ${loggedInPrp} (${currentLoginStateVal})`)
         return
@@ -478,7 +480,7 @@ import {
         }
       }
       lgr.log('Updating cart with attributes')
-      let r = await fetch('/api/cart/updateAttributes', {
+      let r = await fetch(`${ajaxCartRoute}/update.js`, {
         method: 'POST',
         headers: cartRequestHeaders,
         body: JSON.stringify(payload)
@@ -523,6 +525,7 @@ import {
         // preserve existing properties, add logged in property and set it
         const isLoggedInStr = isLoggedInToShopRunner.toString()
         const currentVal = prps[loggedInPrp]
+        const { ajaxCartRoute } = themeConfig
         if (currentVal === isLoggedInStr) {
           lgr.log(`No change to line item property ${loggedInPrp} (${currentVal}) on item ${i}`)
           i++
@@ -536,7 +539,7 @@ import {
         }
         const lineInfo = `index ${i}, key ${item.key}`
         lgr.log(`Changing cart line item properties for item ${lineInfo}`, payload)
-        let r = await fetch('/cart/change.js', {
+        let r = await fetch(`${ajaxCartRoute}/change.js`, {
           method: 'POST',
           headers: cartRequestHeaders,
           body: JSON.stringify(payload)
@@ -1071,9 +1074,9 @@ import {
   /* HELPERS */
   
   export async function getCart () {
+    const { ajaxCartRoute } = themeConfig
     try {
-     // const cartResponse = await fetch('/cart.json')
-      const cartResponse = await fetch('/api/cart')
+      const cartResponse = await fetch((ajaxCartRoute !== '/cart')? ajaxCartRoute: '/cart.json')
       const cart = await cartResponse.json()
       return cart
     } catch (e) {
@@ -1081,21 +1084,20 @@ import {
     }
   }
   
-  export function getPageType (pageTypeFromLiquid = '') {
-    let pageType = ''
-    try {
-      let shopifyPageData = window.ShopifyAnalytics.meta.page
-      // event.context.document.location.pathname.split('/').pop()
-      // Shopify.Checkout.step
-      let prp = 'pageType'
-      if (pageTypeFromLiquid === 'checkout') prp = 'path'
-      if (shopifyPageData) pageType = shopifyPageData[prp]
-      const mappedVal = shopifyToShopRunnerPageTypeMap[pageType]
-      pageType = mappedVal || pageType || pageTypeFromLiquid
-      return pageType
-    } catch (e) {
-      lgr.error(e)
-      return pageType
+  export function getPageType() {
+    const url = window.location.href
+    const path = new URL(url).pathname;
+    const segments = path.split('/').filter(Boolean);
+    switch (segments[0]) {
+        case 'collections':
+            return 'collection';
+        case 'products':
+        case 'product':
+            return 'product';
+        case 'cart':
+            return 'cart';
+        default:
+            return 'home';
     }
   }
   

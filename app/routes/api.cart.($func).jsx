@@ -1,107 +1,125 @@
 import {json} from '@shopify/remix-oxygen';
 
-export async function loader({context, params}) {
-  const {cart} = context;
-  const cartObject = await cart.get()
+function mapHydrogenCartToAjaxCart(hydrogenCart) {
+  const attributes = hydrogenCart.attributes.reduce((acc, attribute) => {
+    acc[attribute.key] = attribute.value;
+    return acc;
+  }, {});
 
-  
-  return {
-    "token": "00fb6e84b4917cfb5246b00e5061478a",
-    "note": null,
-    "attributes": {
-      "_isLoggedInToShopRunner": "true",
-      "_srToken": "23381ac3e4a24f689b6501ad8bb4bc69"
-    },
-    "original_total_price": 5000,
-    "total_price": 5000,
-    "total_discount": 0,
-    "total_weight": 3629,
-    "item_count": 1,
-    "items": [
-      {
-        "id": 44894561108268,
-        "properties": {
-          "_isLoggedInToShopRunner": "true"
-        },
-        "quantity": 1,
-        "variant_id": 44894561108268,
-        "key": "44894561108268:cfabcc3587f4a304a242a71648bdedf8",
-        "title": "Example T-Shirt - SR - Lithograph - Height: 9&quot; x Width: 12&quot;",
-        "price": 5000,
-        "original_price": 5000,
-        "presentment_price": 50,
-        "discounted_price": 5000,
-        "line_price": 5000,
-        "original_line_price": 5000,
-        "total_discount": 0,
-        "discounts": [],
-        "sku": null,
-        "grams": 3629,
-        "vendor": "Acme",
-        "taxable": true,
-        "product_id": 8256294617388,
-        "product_has_only_default_variant": false,
-        "gift_card": false,
-        "final_price": 5000,
-        "final_line_price": 5000,
-        "url": "/products/example-t-shirt?variant=44894561108268",
-        "featured_image": {
-          "aspect_ratio": 1.499,
-          "alt": "Example T-Shirt - SR",
-          "height": 3335,
-          "url": "https://cdn.shopify.com/s/files/1/0676/4203/2428/products/green-t-shirt.jpg?v=1681140282",
-          "width": 5000
-        },
-        "image": "https://cdn.shopify.com/s/files/1/0676/4203/2428/products/green-t-shirt.jpg?v=1681140282",
-        "handle": "example-t-shirt",
-        "requires_shipping": true,
-        "product_type": "Shirts",
-        "product_title": "Example T-Shirt - SR",
-        "product_description": "",
-        "variant_title": "Lithograph - Height: 9\" x Width: 12\"",
-        "variant_options": [
-          "Lithograph - Height: 9\" x Width: 12\""
-        ],
-        "options_with_values": [
-          {
-            "name": "Title",
-            "value": "Lithograph - Height: 9\" x Width: 12\""
-          }
-        ],
-        "line_level_discount_allocations": [],
-        "line_level_total_discount": 0,
-        "quantity_rule": {
-          "min": 1,
-          "max": null,
-          "increment": 1
-        },
-        "has_components": false
-      }
-    ],
-    "requires_shipping": true,
-    "currency": "USD",
-    "items_subtotal_price": 5000,
-    "cart_level_discount_applications": []
-  }
-  console.log(params.func, 'GET');
-  console.log(Object.keys(cart));
-  return json(await cart.get());
+  const ajaxCart = {
+    token: hydrogenCart.id.split('?key=')[1], // Extract token from ID
+    note: hydrogenCart.note,
+    attributes,
+    original_total_price: parseInt(hydrogenCart.cost.totalAmount.amount) * 100,
+    total_price: parseInt(hydrogenCart.cost.totalAmount.amount) * 100,
+    // total_discount: 0,
+    // total_weight: 3629, // This value needs to be adjusted accordingly
+    item_count: hydrogenCart.totalQuantity,
+    items: hydrogenCart.lines.nodes.map((item) => ({
+      id: parseInt(item.merchandise.id.split('/').pop()),
+      // properties: {
+      //   _isLoggedInToShopRunner: hydrogenCart.buyerIdentity.customer
+      //     ? 'true'
+      //     : 'false',
+      // },
+      quantity: item.quantity,
+      variant_id: parseInt(item.merchandise.id.split('/').pop()),
+      key: item.id.split('?cart=')[0].split('/').pop(),
+      title: item.merchandise.product.title + ' - ' + item.merchandise.title,
+      price: parseInt(item.cost.amountPerQuantity.amount) * 100,
+      original_price: parseInt(item.cost.amountPerQuantity.amount) * 100,
+      presentment_price: parseInt(item.cost.amountPerQuantity.amount),
+      discounted_price: parseInt(item.cost.amountPerQuantity.amount) * 100,
+      line_price: parseInt(item.cost.totalAmount.amount) * 100,
+      original_line_price: parseInt(item.cost.totalAmount.amount) * 100,
+      total_discount: 0,
+      discounts: [],
+      // sku: null, // SKU would need to be added if available
+      // grams: 3629, // This value needs to be adjusted accordingly
+      vendor: item.merchandise.product.vendor,
+      // taxable: true, // Adjust according to actual data
+      product_id: parseInt(item.merchandise.product.id.split('/').pop()),
+      // product_has_only_default_variant: false, // Adjust according to actual data
+      // gift_card: false, // Adjust according to actual data
+      final_price: parseInt(item.cost.amountPerQuantity.amount) * 100,
+      final_line_price: parseInt(item.cost.totalAmount.amount) * 100,
+      url: `/products/${item.merchandise.product.handle}?variant=${parseInt(
+        item.merchandise.id.split('/').pop(),
+      )}`,
+      featured_image: {
+        aspect_ratio:
+          item.merchandise.image.width / item.merchandise.image.height,
+        alt: item.merchandise.image.altText,
+        height: item.merchandise.image.height,
+        url: item.merchandise.image.url,
+        width: item.merchandise.image.width,
+      },
+      image: item.merchandise.image.url,
+      handle: item.merchandise.product.handle,
+      requires_shipping: item.merchandise.requiresShipping,
+      // product_type: 'Shirts', // Adjust according to actual data
+      product_title: item.merchandise.product.title,
+      // product_description: '', // Adjust according to actual data
+      variant_title: item.merchandise.title,
+      variant_options: item.merchandise.selectedOptions.map(
+        (option) => option.value,
+      ),
+      options_with_values: item.merchandise.selectedOptions.map((option) => ({
+        name: option.name,
+        value: option.value,
+      })),
+      line_level_discount_allocations: [],
+      line_level_total_discount: 0,
+      quantity_rule: {
+        min: 1,
+        max: null,
+        increment: 1,
+      },
+      // has_components: false, // Adjust according to actual data
+    })),
+    requires_shipping: hydrogenCart.lines.nodes.some(
+      (item) => item.merchandise.requiresShipping,
+    ),
+    currency: hydrogenCart.cost.totalAmount.currencyCode,
+    items_subtotal_price:
+      parseInt(hydrogenCart.cost.subtotalAmount.amount) * 100,
+    cart_level_discount_applications: hydrogenCart.discountCodes,
+  };
+  console.log('ajaxCart', ajaxCart);
+  return ajaxCart;
 }
 
+export async function loader({context, params}) {
+  const {cart} = context;
+  const cartObject = await cart.get();
+  const formatedCartData = mapHydrogenCartToAjaxCart(cartObject);
+  return formatedCartData;
+}
+
+//*********** Usage ***********
+// const result = await cart.updateLines(
+//   [
+//     {
+//       merchandiseId: 'gid://shopify/ProductVariant/123456789',
+//       quantity: 2,
+//     },
+//   ],
+//   // Optional parameters
+//   {
+//     cartId: '123', // override the cart id
+//     country: 'US', // override the country code to 'US'
+//     language: 'EN', // override the language code to 'EN'
+//   },
+// ); */ 
+
 export async function action({context, params, request}) {
-//updateAttributes
-const {cart} = context;
-console.log(params.func, 'POST');
-const jsonTemp = await request.json()
-console.log(jsonTemp, 'POST');
+  //updateAttributes
+  //const {cart} = context;
+  const {id, properties, quantity} = await request.json();
 
-return json(await cart.updateAttributes(
-  [
-    {
-      key: 'Somekey',
-      value: '1',
-    },
-  ],
-));
-
+  console.log(params.func, 'POST');
+  //console.log(jsonTemp, 'POST');
+  // const cartObject = await cart.get();
+  // return cartObject;
+  return {id, properties, quantity};
 }

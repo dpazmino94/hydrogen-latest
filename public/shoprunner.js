@@ -28,7 +28,7 @@ lgr.log('pageType:', pageType);
 
 const themeConfig = {
   dynamicPaymentButtonModalMessage: 'Thanks for being a ShopRunner member! Please enter your email address to enable ShopRunner Free Shipping in checkout',
-  addToCartSelector: 'button[name="add"]',
+  addToCartSelector: 'body > main > div > div.product-main > div.product-form > form > button',
   paymentButtonContainerSelector: 'div[data-shopify="payment-button"]',
   paymentButtonSelector: 'button.shopify-payment-button__button',
   shippingMethodsContainerSelector: 'div[data-step="shipping_method"] .section__content',
@@ -38,6 +38,7 @@ const themeConfig = {
   pdpBenefitsAccessSelector: 'body > main > div > div.product-main > h1',
   pdpVariantIdHiddenInputSelector: 'form[action="/cart/add"] input[data-variant-id][name="quantity"]',
   shopifyStoreUrl: 'https://shoprunner-demo-01.myshopify.com',
+  ajaxCartRoute: '/api/cart',
   eligibilityContainerSelectors: [
     {
       productSelector: 'div.product-main > div.product-price',
@@ -57,13 +58,13 @@ const themeConfig = {
       placementMethod: 'after',
     },
     {
-      productSelector: '#cart-drawer > div.cart-drawer__body > div.cart-drawer__items.aos-init.aos-animate > div > div.cart__item__content > div.cart__item__content-inner > div > p > a',
+      productSelector: '#cart-aside > aside > main > div > div.cart-details > div:nth-child(1) > ul > li > div > a',
       locationMethod: 'closest',
-      locationSelector: 'p',
+      locationSelector: 'div',
       placementMethod: 'after',
     },
     {
-      productSelector: '#cart-drawer > div.cart-drawer__body > div.cart-drawer__items.aos-init.aos-animate > div > div.cart__item__content > div.cart__item__content-inner > div > p > a',
+      productSelector: '#cart-aside > aside > main > div > div.cart-details > div:nth-child(1) > ul > li > div > a',
       locationMethod: 'closest',
       locationSelector: 'p',
       placementMethod: 'after',
